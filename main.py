@@ -122,4 +122,13 @@ def afiseaza_grafice(df):
             plt.tight_layout()
             plt.show()
 
-afiseaza_grafice(df)
+#afiseaza_grafice(df) 
+
+corr_matrix = df.corr()
+
+print(corr_matrix)
+
+plt.figure(figsize=(20, 10))  
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+
+plt.show()
