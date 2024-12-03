@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from scipy.stats import bernoulli
 
 class Perceptron:
@@ -125,12 +124,3 @@ class Perceptron:
     def predict(self, X, W1, b1, W2, b2):
         _, A2, _ = self.__forward_pass__(X, W1, b1, W2, b2)
         return np.argmax(A2, axis=1)
-        
-p = Perceptron(pd.read_excel('cat_data_preprocesat.xlsx'))
-W1, b1, W2, b2 = p.antreneaza()
-
-train_predictions = p.predict(p.train_x, W1, b1, W2, b2)
-test_predictions = p.predict(p.test_x, W1, b1, W2, b2)
-
-print(f'Training Accuracy: {accuracy_score(np.argmax(p.train_y, axis=1), train_predictions) * 100:.2f}%')
-print(f'Test Accuracy: {accuracy_score(p.test_y, test_predictions) * 100:.2f}%')

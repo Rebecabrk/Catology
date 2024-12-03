@@ -3,19 +3,28 @@ import pandas as pd
 
 pd.set_option('future.no_silent_downcasting', True) # ca sa nu mai avem warning-uri
 
-class OneHotEncoderPersonalizat:
-    def __init__(self):
+class ModificariDate:
+    def __init__(self, smote=False):
         if not os.path.exists('cat_data_preprocesat.xlsx'):
-            self.df = self.__citire_set_de_date__()
+            self.df = self.__citire_set_de_date__('cat_data.xlsx', sheet_name='Data')
             self.df = self.__codificare__(self.df)
             self.df = self.__inlocuieste_zero_cu_media__(self.df)
-            self.__scriere_set_de_date_codificat__(self.df)
+            self.__scriere_set_de_date__(self.df, 'cat_data_preprocesat.xlsx')
         else:
-            self.__citire_set_de_date_codificat__()
+            self.df = self.__citire_set_de_date__('cat_data_preprocesat.xlsx', sheet_name='Sheet1')
+       
+        if smote:
+            if not os.path.exists('cat_data_preprocesat_plus_smote.xlsx'):
+                self.df_smote = self.__aplica_smote__(self.df)
+                self.__scriere_set_de_date__(self.df_smote, 'cat_data_preprocesat_plus_smote.xlsx')
+            else:
+                self.df_smote = self.__citire_set_de_date__('cat_data_preprocesat_plus_smote.xlsx')               
     
-    def __citire_set_de_date__(self):
-        df = pd.read_excel('cat_data.xlsx', sheet_name='Data')
-        df = df.drop(columns=['Horodateur', 'Row.names', 'Plus'])
+    def __citire_set_de_date__(self, fisier, sheet_name=None):
+        dict = pd.read_excel(fisier, sheet_name=sheet_name)
+        df = pd.DataFrame(dict)
+        if fisier == 'cat_data.xlsx':
+            df = df.drop(columns=['Horodateur', 'Row.names', 'Plus'])
         df = df.drop_duplicates()
         return df
     
@@ -64,9 +73,8 @@ class OneHotEncoderPersonalizat:
             df[col] = df[col].replace(0, media_rotunjita)
         return df
     
-    def __scriere_set_de_date_codificat__(self, df):
-        df.to_excel('cat_data_preprocesat.xlsx', index=False)
-
-    def __citire_set_de_date_codificat__(self):
-        self.df = pd.read_excel('cat_data_preprocesat.xlsx')
-        return self.df
+    def __scriere_set_de_date__(self, df, fisier):
+        df.to_excel(fisier, index=False)
+    
+    def __aplica_smote__(self, df):
+        pass
