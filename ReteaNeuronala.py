@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from scipy.stats import bernoulli
+import matplotlib.pyplot as plt
 
 class Perceptron:
     """
@@ -94,6 +95,7 @@ class Perceptron:
         return W1, b1, W2, b2
     
     def antreneaza(self, nr_neuroni_strat_ascuns=100, rata_de_invatare=0.01, epoci=1000, batch_size=100):
+        mean_losses = []
         self.__weights_init_Xavier_Uniform__(nr_neuroni_strat_ascuns)
 
         for epoca in range(epoci):
@@ -102,6 +104,7 @@ class Perceptron:
             y = self.train_y[perm]
 
             for i in range (0, X.shape[0], batch_size):
+                mean_loss_per_batch = 0
                 X_batch = X[i:i+batch_size]
                 y_batch = y[i:i+batch_size]
 
@@ -110,6 +113,7 @@ class Perceptron:
 
                 # Compute loss
                 loss = self.__compute_loss_cross_entropy__(y_batch, A2)
+                mean_loss_per_batch += loss
 
                 # Backward pass
                 dw1, db1, dw2, db2 = self.__backward_pass__(X_batch, y_batch, A1, A2, self.W2, dropouts, dropout_rate=0.5)
@@ -118,9 +122,17 @@ class Perceptron:
                 self.W1, self.b1, self.W2, self.b2 = self.__update_weights__(self.W1, self.b1, self.W2, self.b2, dw1, db1, dw2, db2, rata_de_invatare)
 
             print(f'Epoch {epoca+1}/{epoci}, Loss: {loss:.4f}')
+            mean_loss_per_batch /= math.ceil(X.shape[0] / batch_size)
+            mean_losses.append(mean_loss_per_batch)
 
-        return self.W1, self.b1, self.W2, self.b2
+        return self.W1, self.b1, self.W2, self.b2, mean_losses
     
     def predict(self, X, W1, b1, W2, b2):
         _, A2, _ = self.__forward_pass__(X, W1, b1, W2, b2)
         return np.argmax(A2, axis=1)
+    
+    def ploteaza_loss(self, mean_losses):
+        plt.plot(mean_losses)
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.show()

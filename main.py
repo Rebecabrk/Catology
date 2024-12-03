@@ -13,7 +13,8 @@ statistici = Statistici(date_codificate, true_labels=True)
 # statistici.afiseaza_grafice()
 
 p = Perceptron(date_codificate)
-W1, b1, W2, b2 = p.antreneaza()
+W1, b1, W2, b2, mean_losses = p.antreneaza()
+p.ploteaza_loss(mean_losses)
 
 train_predictions = p.predict(p.train_x, W1, b1, W2, b2)
 test_predictions = p.predict(p.test_x, W1, b1, W2, b2)
