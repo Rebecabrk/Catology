@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from scipy.stats import bernoulli
 
 class Perceptron:
     """
@@ -29,17 +30,17 @@ class Perceptron:
         self.train_y = encoder.fit_transform(self.train_y.reshape(-1, 1))
         # self.test_y = encoder.fit_transform(self.test_y.reshape(-1, 1))
 
-    def __weights_init_Xavier_Uniform__(self):
-        low_bound = -math.sqrt(6 / (self.train_x.shape[1] + 10)) # 10 neuroni pe stratul ascuns
-        upper_bound = math.sqrt(6 / (self.train_x.shape[1] + 10))
+    def __weights_init_Xavier_Uniform__(self, nr_neuroni_strat_ascuns):
+        low_bound = -math.sqrt(6 / (self.train_x.shape[1] + nr_neuroni_strat_ascuns)) 
+        upper_bound = math.sqrt(6 / (self.train_x.shape[1] + nr_neuroni_strat_ascuns))
 
-        self.W1 = np.random.uniform(low=low_bound, high=upper_bound, size=(self.train_x.shape[1], 10))
-        self.b1 = np.zeros((1, 10))
+        self.W1 = np.random.uniform(low=low_bound, high=upper_bound, size=(self.train_x.shape[1], nr_neuroni_strat_ascuns))
+        self.b1 = np.zeros((1, nr_neuroni_strat_ascuns))
 
-        low_bound = -math.sqrt(6 / (10 + self.train_y.shape[1])) # 10 neuroni pe stratul ascuns
-        upper_bound = math.sqrt(6 / (10 + self.train_y.shape[1]))
+        low_bound = -math.sqrt(6 / (nr_neuroni_strat_ascuns + self.train_y.shape[1])) 
+        upper_bound = math.sqrt(6 / (nr_neuroni_strat_ascuns + self.train_y.shape[1]))
 
-        self.W2 = np.random.uniform(low=low_bound, high=upper_bound, size=(10, self.train_y.shape[1]))  
+        self.W2 = np.random.uniform(low=low_bound, high=upper_bound, size=(nr_neuroni_strat_ascuns, self.train_y.shape[1]))  
         self.b2 = np.zeros((1, self.train_y.shape[1]))
 
     def __sigmoid__(self, Z):
@@ -49,16 +50,19 @@ class Perceptron:
         expZ = np.exp(Z - np.max(Z, axis=1, keepdims=True))
         return expZ / np.sum(expZ, axis=1, keepdims=True)
     
-    def __forward_pass__(self, X, W1, b1, W2, b2):
+    def __forward_pass__(self, X, W1, b1, W2, b2, dropout_rate=0):
         Z1 = np.dot(X, W1) + b1
         A1 = self.__sigmoid__(Z1) # functia de activare pentru stratul ascuns
+
+        dropouts = bernoulli.rvs(1 - dropout_rate, size=A1.shape)
+        A1 = A1 * dropouts / (1 - dropout_rate)
 
         Z2 = np.dot(A1, W2) + b2
         A2 = self.__softmax__(Z2) # functia de activare pentru stratul de iesire
 
-        return A1, A2
+        return A1, A2, dropouts
     
-    def __backward_pass__(self, X, y, A1, A2, W2):
+    def __backward_pass__(self, X, y, A1, A2, W2, dropouts=None, dropout_rate=0):
         m = y.shape[0]
 
         dZ2 = A2 - y  # Derivative of softmax + cross-entropy
@@ -67,6 +71,9 @@ class Perceptron:
     
         # Hidden layer error term (dZ1)
         dZ1 = np.dot(dZ2, W2.T) * A1 * (1 - A1)  # For sigmoid activation (derivative of sigmoid)
+
+        dZ1 = dZ1 * dropouts
+        dZ1 /= (1 - dropout_rate)
 
         dW1 = np.dot(X.T, dZ1) / m  # Gradient w.r.t. weights (hidden layer)
         db1 = np.sum(dZ1, axis=0, keepdims=True) / m  # Gradient w.r.t. biases (hidden layer)
@@ -87,8 +94,8 @@ class Perceptron:
         b2 = b2 - learning_rate * db2
         return W1, b1, W2, b2
     
-    def antreneaza(self, rata_de_invatare=0.01, epoci=1000, batch_size=100):
-        self.__weights_init_Xavier_Uniform__()
+    def antreneaza(self, nr_neuroni_strat_ascuns=100, rata_de_invatare=0.01, epoci=1000, batch_size=100):
+        self.__weights_init_Xavier_Uniform__(nr_neuroni_strat_ascuns)
 
         for epoca in range(epoci):
             perm = np.random.permutation(self.train_x.shape[0])
@@ -100,23 +107,23 @@ class Perceptron:
                 y_batch = y[i:i+batch_size]
 
                 # Forward pass
-                A1, A2 = self.__forward_pass__(X_batch, self.W1, self.b1, self.W2, self.b2)
+                A1, A2, dropouts = self.__forward_pass__(X_batch, self.W1, self.b1, self.W2, self.b2, dropout_rate=0.5)
 
                 # Compute loss
                 loss = self.__compute_loss_cross_entropy__(y_batch, A2)
 
                 # Backward pass
-                dw1, db1, dw2, db2 = self.__backward_pass__(X_batch, y_batch, A1, A2, self.W2)
+                dw1, db1, dw2, db2 = self.__backward_pass__(X_batch, y_batch, A1, A2, self.W2, dropouts, dropout_rate=0.5)
 
                 # Update weights
-                W1, b1, W2, b2 = self.__update_weights__(self.W1, self.b1, self.W2, self.b2, dw1, db1, dw2, db2, rata_de_invatare)
+                self.W1, self.b1, self.W2, self.b2 = self.__update_weights__(self.W1, self.b1, self.W2, self.b2, dw1, db1, dw2, db2, rata_de_invatare)
 
-            print(f'Epoch {epoca+1}/{epoca}, Loss: {loss:.4f}')
+            print(f'Epoch {epoca+1}/{epoci}, Loss: {loss:.4f}')
 
-        return W1, b1, W2, b2
+        return self.W1, self.b1, self.W2, self.b2
     
     def predict(self, X, W1, b1, W2, b2):
-        _, A2 = self.__forward_pass__(X, W1, b1, W2, b2)
+        _, A2, _ = self.__forward_pass__(X, W1, b1, W2, b2)
         return np.argmax(A2, axis=1)
         
 p = Perceptron(pd.read_excel('cat_data_preprocesat.xlsx'))
