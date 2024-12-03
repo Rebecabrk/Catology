@@ -5,6 +5,10 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from scipy.stats import bernoulli
 import matplotlib.pyplot as plt
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill
+import openpyxl
+from openpyxl.utils import get_column_letter
 
 class Perceptron:
     """
@@ -21,6 +25,7 @@ class Perceptron:
     def __init__(self, df):
         y = df['Race']
         X = df.drop(columns='Race')
+        self.X = X
         self.train_x, self.test_x, self.train_y, self.test_y = train_test_split(X, y, test_size=0.1, random_state=42)
         self.train_x, self.test_x, self.train_y, self.test_y = np.array(self.train_x), np.array(self.test_x), np.array(self.train_y), np.array(self.test_y)
         self.__one_hot_encode__()
@@ -94,7 +99,7 @@ class Perceptron:
         b2 = b2 - learning_rate * db2
         return W1, b1, W2, b2
     
-    def antreneaza(self, nr_neuroni_strat_ascuns=100, rata_de_invatare=0.01, epoci=1000, batch_size=100):
+    def antreneaza(self, nr_neuroni_strat_ascuns=100, rata_de_invatare=0.01, epoci=2, batch_size=100):
         mean_losses = []
         self.__weights_init_Xavier_Uniform__(nr_neuroni_strat_ascuns)
 
@@ -136,3 +141,39 @@ class Perceptron:
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
         plt.show()
+    
+    def vizualizeaza_puncte_eronate(self, X, y, predictions, hide_instances=False):
+        df_x = pd.DataFrame(X, columns=self.X.columns)
+        df_y = pd.DataFrame(y, columns=['true_label'])
+        df_pred = pd.DataFrame(predictions, columns=['predicted_label'])
+        df = pd.concat([df_x, df_y, df_pred], axis=1)
+
+        df.to_excel('puncte_eronate.xlsx', index=False)
+
+        # Load the workbook and select the active worksheet
+        wb = Workbook()
+        ws = wb.active
+
+        # Open the Excel file
+        wb = openpyxl.load_workbook('puncte_eronate.xlsx')
+        ws = wb.active
+
+        # Define the fill colors for correct and incorrect predictions
+        green_fill = PatternFill(start_color='00FF00', end_color='00FF00', fill_type='solid')
+        red_fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+
+        # Apply conditional formatting to the rows
+        for row in range(2, len(df) + 2):  # Start from row 2 to skip the header
+            true_label = ws.cell(row=row, column=len(df_x.columns) + 1).value
+            predicted_label = ws.cell(row=row, column=len(df_x.columns) + 2).value
+            fill = green_fill if true_label == predicted_label else red_fill
+            for col in range(1, len(df.columns) + 1):
+                ws.cell(row=row, column=col).fill = fill
+        
+        if hide_instances: 
+            start_col = get_column_letter(1)
+            end_col = get_column_letter(len(df_x.columns))
+            ws.column_dimensions.group(start_col, end_col, hidden=True)
+
+        # Save the workbook
+        wb.save('puncte_eronate.xlsx')
