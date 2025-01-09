@@ -7,6 +7,7 @@ from nltk.corpus import wordnet as wn
 import random
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
+from transformers import pipeline
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -36,10 +37,9 @@ def stilometric_info(text):
     for word, freq in freq_dist.items():
         print(f"{word}: {freq}")
 
-text = "Acesta este un exemplu de text, pentru a afișa informații stilometrice folosind nltk."
+text = "Ana are mere si din aceste mere vrea sa faca o placinta de mere."
 
-# stilometric_info(text)
-from nltk.tokenize import word_tokenize
+stilometric_info(text)
 
 def get_synonyms(word):
     synonyms = set()
@@ -56,25 +56,25 @@ def get_hypernyms(word):
                 hypernyms.add(lemma.name())
     return list(hypernyms)
 
-def get_antonym_negation(word):
+'''def get_antonym_negation(word):
     antonyms = set()
     for syn in wn.synsets(word):
         for lemma in syn.lemmas():
             if lemma.antonyms():
                 antonyms.add("nu " + lemma.antonyms()[0].name())
-    return list(antonyms)
+    return list(antonyms)'''
 
-def generate_alternative_versions(text, replacement_rate=0.2):
+def generate_alternative_versions(text, replacement_rate=0.3):
     words = word_tokenize(text)
     new_texts = []
-    for _ in range(5):  # Generăm 5 versiuni alternative
+    for _ in range(5):  
         new_words = []
         for word in words:
             if random.random() < replacement_rate:
                 synonyms = get_synonyms(word)
                 hypernyms = get_hypernyms(word)
-                antonyms = get_antonym_negation(word)
-                replacements = synonyms + hypernyms + antonyms
+                #antonyms = get_antonym_negation(word)
+                replacements = synonyms + hypernyms #+ antonyms
                 if replacements:
                     new_words.append(random.choice(replacements))
                 else:
@@ -85,7 +85,7 @@ def generate_alternative_versions(text, replacement_rate=0.2):
     return new_texts
 
 # Exemplu de text
-text = "Hi. I am a student. I like to study natural language processing. It is interesting. I am learning new things."
+text = "Cats are a domestic species of feline. They live in houses with humans."
 
 # Generare versiuni alternative
 alternative_versions = generate_alternative_versions(text)
@@ -121,14 +121,10 @@ def generate_sentences(text, keywords):
     
     return keyword_sentences
 
-# Exemplu de text
-text = "Acesta este un exemplu de text pentru a afișa informații stilometrice folosind nltk. NLTK este o bibliotecă puternică pentru procesarea limbajului natural."
-
-# Extrage cuvintele cheie
+text = "Ana are mere. Din aceste mere vrea sa faca o placinta. Placinta de mere va fi delicioasa."
 keywords = extract_keywords(text)
 print("Cuvinte cheie:", keywords)
 
-# Generează propoziții pentru cuvintele cheie
 keyword_sentences = generate_sentences(text, keywords)
 for keyword, sentence in keyword_sentences.items():
     print(f"Propoziție pentru '{keyword}': {sentence}")
