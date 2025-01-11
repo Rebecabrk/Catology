@@ -9,6 +9,7 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 import openpyxl
 from openpyxl.utils import get_column_letter
+import pickle as pkl
 
 class Perceptron:
     """
@@ -84,7 +85,6 @@ class Perceptron:
         db1 = np.sum(dZ1, axis=0, keepdims=True) / m  # Gradient w.r.t. biases (hidden layer)
     
         return dW1, db1, dW2, db2
-
     
     def __compute_loss_cross_entropy__(self, y, A2):
         m = y.shape[0]
@@ -135,6 +135,18 @@ class Perceptron:
     def predict(self, X, W1, b1, W2, b2):
         _, A2, _ = self.__forward_pass__(X, W1, b1, W2, b2)
         return np.argmax(A2, axis=1)
+    
+    def save_model(self, filename):
+        with open(filename, 'wb') as f:
+            pkl.dump(self, f)
+        print(f'Model saved to {filename}')
+
+    @staticmethod
+    def load_model(filename):
+        with open(filename, 'rb') as f:
+            model = pkl.load(f)
+        print(f'Model loaded from {filename}')
+        return model
     
     def ploteaza_loss(self, mean_losses):
         plt.plot(mean_losses)
