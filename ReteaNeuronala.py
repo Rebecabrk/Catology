@@ -93,13 +93,13 @@ class Perceptron:
         return loss
     
     def __update_weights__(self, W1, b1, W2, b2, dW1, db1, dW2, db2, learning_rate):
-        W1 = W1 - learning_rate * dW1
-        b1 = b1 - learning_rate * db1
-        W2 = W2 - learning_rate * dW2
-        b2 = b2 - learning_rate * db2
-        return W1, b1, W2, b2
+        updated_W1 = W1 - learning_rate * dW1
+        updated_b1 = b1 - learning_rate * db1
+        updated_W2 = W2 - learning_rate * dW2
+        updated_b2 = b2 - learning_rate * db2
+        return updated_W1, updated_b1, updated_W2, updated_b2
     
-    def antreneaza(self, nr_neuroni_strat_ascuns=100, rata_de_invatare=0.01, epoci=2, batch_size=100):
+    def antreneaza(self, nr_neuroni_strat_ascuns=100, rata_de_invatare=0.01, epoci=150, batch_size=64):
         mean_losses = []
         self.__weights_init_Xavier_Uniform__(nr_neuroni_strat_ascuns)
 
@@ -114,14 +114,14 @@ class Perceptron:
                 y_batch = y[i:i+batch_size]
 
                 # Forward pass
-                A1, A2, dropouts = self.__forward_pass__(X_batch, self.W1, self.b1, self.W2, self.b2, dropout_rate=0.5)
+                A1, A2, dropouts = self.__forward_pass__(X_batch, self.W1, self.b1, self.W2, self.b2, dropout_rate=0.2)
 
                 # Compute loss
                 loss = self.__compute_loss_cross_entropy__(y_batch, A2)
                 mean_loss_per_batch += loss
 
                 # Backward pass
-                dw1, db1, dw2, db2 = self.__backward_pass__(X_batch, y_batch, A1, A2, self.W2, dropouts, dropout_rate=0.5)
+                dw1, db1, dw2, db2 = self.__backward_pass__(X_batch, y_batch, A1, A2, self.W2, dropouts, dropout_rate=0.2)
 
                 # Update weights
                 self.W1, self.b1, self.W2, self.b2 = self.__update_weights__(self.W1, self.b1, self.W2, self.b2, dw1, db1, dw2, db2, rata_de_invatare)
