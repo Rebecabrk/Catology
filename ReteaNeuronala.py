@@ -30,6 +30,12 @@ class Perceptron:
         self.train_x, self.test_x, self.train_y, self.test_y = train_test_split(X, y, test_size=0.1, random_state=42)
         self.train_x, self.test_x, self.train_y, self.test_y = np.array(self.train_x), np.array(self.test_x), np.array(self.train_y), np.array(self.test_y)
         self.__one_hot_encode__()
+    
+    def set_feature_names(self, feature_names):
+        self.feature_names = feature_names
+
+    def get_feature_names(self):
+        return self.feature_names
 
     def __one_hot_encode__(self):
         encoder = OneHotEncoder(sparse_output=False)
