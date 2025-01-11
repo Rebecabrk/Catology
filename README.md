@@ -27,3 +27,12 @@ Before running the main script, you need to train the model using the train scri
 ```sh
 python train.py
 ```
+
+### Running main
+
+You need to provide the description of you cat, either by a file or by command-line. Thus, to run the main.py file you need to choose between:
+
+```sh
+python main.py --file FILE or
+python main.py --text TEXT
+```
