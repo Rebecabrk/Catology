@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import json
 
 pd.set_option('future.no_silent_downcasting', True) # ca sa nu mai avem warning-uri
 
@@ -27,6 +28,45 @@ class ModificariDate:
             df = df.drop(columns=['Horodateur', 'Row.names', 'Plus'])
         df = df.drop_duplicates()
         return df
+    
+    @staticmethod
+    def extract_feature_names(df, print_dict=False):
+        translation_dict = {
+            'Sexe': 'Sex',
+            'Age': 'Age',
+            'Race': 'Breed',
+            'Nombre': 'Number',
+            'Logement': 'Housing',
+            'Zone': 'Zone',
+            'Ext': 'Ext',
+            'Obs': 'Obs',
+            'Timide': 'Shy',
+            'Calme': 'Calm',
+            'Effrayé': 'Scared',
+            'Intelligent': 'Intelligent',
+            'Vigilant': 'Vigilant',
+            'Perséverant': 'Persistent',
+            'Affectueux': 'Affectionate',
+            'Amical': 'Friendly',
+            'Solitaire': 'Solitary',
+            'Brutal': 'Brutal',
+            'Dominant': 'Dominant',
+            'Agressif': 'Aggressive',
+            'Impulsif': 'Impulsive',
+            'Prévisible': 'Predictable',
+            'Distrait': 'Distracted',
+            'Abondance': 'Abundance',
+            'PredOiseau': 'PredBirds',
+            'PredMamm': 'PredMammals',
+        }
+
+        if print_dict:
+            print("Translation dictionary:")
+            for key, value in translation_dict.items():
+                print(f"{key} -> {value}")
+            print()
+        return [translation_dict[col] for col in df.columns]
+
     
     def __codificare__(self, df):
         df['Sexe'] = df['Sexe'].replace('F', 0)
@@ -65,6 +105,25 @@ class ModificariDate:
 
         df = df.replace('NSP', -1)
         df = df.astype(int)
+
+        race_codification = {
+            0: 'BENGAL',
+            1: 'BIRMAN',
+            2: 'BRITISH_SHORTHAIR',
+            3: 'CHARTREUX',
+            4: 'EUROPEAN',
+            5: 'MAINE_cOON',
+            6: 'PERSIAN',
+            7: 'RAGDOLL',
+            8: 'SPHYNX',
+            9: 'SIAMESE', #ORI.....
+            10: 'TURKISH_ANGORA',
+            11: 'OTHER',
+            12: 'NO_BREED',
+            13: 'SAVANNAH'
+        }
+        with open('race_codification.json', 'w') as json_file:
+            json.dump(race_codification, json_file, indent=4)
         return df
     
     def __inlocuieste_minus1_cu_media__(self, df):
