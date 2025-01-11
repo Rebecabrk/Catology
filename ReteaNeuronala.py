@@ -140,7 +140,7 @@ class Perceptron:
     
     def predict(self, X, W1, b1, W2, b2):
         _, A2, _ = self.__forward_pass__(X, W1, b1, W2, b2)
-        return np.argmax(A2, axis=1)
+        return A2
     
     def save_model(self, filename):
         with open(filename, 'wb') as f:
@@ -161,6 +161,9 @@ class Perceptron:
         plt.show()
     
     def vizualizeaza_puncte_eronate(self, X, y, predictions, hide_instances=False):
+        if predictions.ndim > 1:
+            predictions = np.argmax(predictions, axis=1)
+                    
         df_x = pd.DataFrame(X, columns=self.X.columns)
         df_y = pd.DataFrame(y, columns=['true_label'])
         df_pred = pd.DataFrame(predictions, columns=['predicted_label'])
